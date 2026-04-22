@@ -1,0 +1,903 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-title" content="PATO KEYS">
+    <meta name="mobile-web-app-capable" content="yes">
+    <meta name="theme-color" content="#ff3b30">
+    <link rel="apple-touch-icon" href="https://i.postimg.cc/SsLvGnr5/21896.png">
+    <link rel="manifest" href="data:application/manifest+json,{%22name%22:%22PATO%20KEY%20MANAGER%22,%22short_name%22:%22PATO%20KEYS%22,%22start_url%22:%22.%22,%22display%22:%22standalone%22,%22background_color%22:%22%23020408%22,%22theme_color%22:%22%23ff3b30%22,%22icons%22:[{%22src%22:%22https://i.postimg.cc/SsLvGnr5/21896.png%22,%22sizes%22:%22512x512%22,%22type%22:%22image/png%22,%22purpose%22:%22any%20maskable%22}]}">
+    <title>PATO KEY MANAGER</title>
+    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&family=Share+Tech+Mono&family=Rajdhani:wght@400;600;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --accent: #ff3b30;
+            --accent2: #ff6d00;
+            --bg-card: rgba(255,59,48,0.04);
+            --border: rgba(255,59,48,0.12);
+            --glow: 0 0 20px rgba(255,59,48,0.5);
+            --glow2: 0 0 20px rgba(255,109,0,0.5);
+            --text-dim: #4a6070;
+            --accent-rgb: 255,59,48;
+            --accent2-rgb: 255,109,0;
+        }
+        @keyframes gradMove { 0%{background-position:0% 50%} 50%{background-position:100% 50%} 100%{background-position:0% 50%} }
+        @keyframes slideIn  { from{opacity:0;transform:translateX(15px)} to{opacity:1;transform:translateX(0)} }
+        @keyframes floatUp  { from{opacity:0;transform:translateY(8px)} to{opacity:1;transform:translateY(0)} }
+        @keyframes pulse    { 0%,100%{opacity:1} 50%{opacity:0.3} }
+        @keyframes spin     { from{transform:rotate(0deg)} to{transform:rotate(360deg)} }
+        @keyframes sweep    { 0%{transform:scaleX(0)} 60%{transform:scaleX(1)} 100%{transform:scaleX(0)} }
+
+        * { box-sizing:border-box; margin:0; padding:0; }
+
+        body {
+            background: linear-gradient(-45deg,#020408,#0a0406,#060204,#020004);
+            background-size:400% 400%; animation:gradMove 15s ease infinite;
+            font-family:'Rajdhani',sans-serif;
+            display:flex; justify-content:center; align-items:center;
+            min-height:100vh; color:#fff; -webkit-user-select:none;
+        }
+        body::after {
+            content:''; position:fixed; inset:0;
+            background:repeating-linear-gradient(0deg,transparent,transparent 2px,rgba(0,0,0,0.03) 2px,rgba(0,0,0,0.03) 4px);
+            pointer-events:none; z-index:9999;
+        }
+
+        /* SVG icon helper */
+        .ico { display:inline-block; width:14px; height:14px; fill:none; stroke:currentColor; stroke-width:2; stroke-linecap:round; stroke-linejoin:round; vertical-align:middle; flex-shrink:0; }
+        .ico-sm { width:11px; height:11px; }
+        .ico-lg { width:17px; height:17px; }
+
+        /* SYNC BAR */
+        #sync-bar { position:fixed; top:0; left:0; right:0; height:2px; background:linear-gradient(90deg,var(--accent),var(--accent2)); z-index:8000; transform-origin:left; transform:scaleX(0); display:none; }
+        #sync-bar.active { display:block; animation:sweep 1.4s ease-in-out infinite; }
+
+        /* TOAST */
+        #toast { position:fixed; top:20px; right:20px; padding:10px 20px; border-radius:8px; font-size:11px; font-weight:700; z-index:9000; opacity:0; transition:all .3s cubic-bezier(.175,.885,.32,1.275); transform:translateY(-15px) scale(.9); pointer-events:none; backdrop-filter:blur(10px); font-family:'Orbitron'; letter-spacing:2px; }
+        .toast-success { background:rgba(52,199,89,.15); color:#34c759; opacity:1!important; transform:translateY(0) scale(1)!important; box-shadow:0 0 20px rgba(52,199,89,.4); border:1px solid rgba(52,199,89,.3); }
+        .toast-error   { background:rgba(var(--accent-rgb),.15); color:var(--accent); opacity:1!important; transform:translateY(0) scale(1)!important; box-shadow:var(--glow); border:1px solid rgba(var(--accent-rgb),.3); }
+        .toast-info    { background:rgba(255,109,0,.15); color:var(--accent2); opacity:1!important; transform:translateY(0) scale(1)!important; box-shadow:var(--glow2); border:1px solid rgba(255,109,0,.3); }
+
+        /* GLASS */
+        .glass { background:rgba(2,8,15,.92); backdrop-filter:blur(25px); -webkit-backdrop-filter:blur(25px); border:1px solid var(--border); border-radius:16px; box-shadow:0 0 60px rgba(var(--accent-rgb),.08),0 30px 60px rgba(0,0,0,.8); }
+
+        /* PANEL */
+        #main-panel { width:96vw; max-width:920px; height:90vh; max-height:700px; display:flex; flex-direction:column; overflow:hidden; position:relative; }
+
+        /* HEADER */
+        .win-header { height:48px; background:rgba(var(--accent-rgb),.04); display:flex; align-items:center; padding:0 18px; justify-content:space-between; border-bottom:1px solid var(--border); flex-shrink:0; }
+        .win-dots { display:flex; gap:7px; }
+        .win-dot { width:10px; height:10px; border-radius:50%; }
+        .header-title { font-family:'Orbitron'; color:var(--accent); font-size:10px; letter-spacing:3px; text-shadow:var(--glow); }
+        .header-right { font-family:'Share Tech Mono'; font-size:9px; display:flex; align-items:center; gap:14px; }
+        .live-dot { width:6px; height:6px; border-radius:50%; background:#34c759; box-shadow:0 0 6px #34c759; animation:pulse 1.5s infinite; display:inline-block; margin-right:4px; }
+
+        /* GAS STATUS */
+        #gas-status { display:flex; align-items:center; gap:5px; color:var(--text-dim); }
+        #gas-dot { width:6px; height:6px; border-radius:50%; background:#333; flex-shrink:0; transition:background .3s; }
+        #gas-dot.ok      { background:#34c759; box-shadow:0 0 5px #34c759; }
+        #gas-dot.err     { background:var(--accent); box-shadow:var(--glow); }
+        #gas-dot.loading { background:var(--accent2); animation:pulse .7s infinite; }
+
+        /* LAYOUT */
+        .main-container { display:flex; flex:1; overflow:hidden; }
+        .sidebar { width:128px; background:rgba(0,0,0,.5); border-right:1px solid var(--border); display:flex; flex-direction:column; flex-shrink:0; }
+        .sidebar-top { flex:1; }
+        .sidebar-bottom { border-top:1px solid var(--border); padding:10px 8px; }
+
+        /* NAV */
+        .nav-item { padding:16px 10px; text-align:center; font-size:10px; color:var(--text-dim); cursor:pointer; font-weight:700; border-bottom:1px solid rgba(255,255,255,.02); transition:all .2s; letter-spacing:1px; font-family:'Rajdhani'; display:flex; flex-direction:column; align-items:center; gap:5px; }
+        .nav-item:hover { color:#aaa; background:rgba(var(--accent-rgb),.03); }
+        .nav-item.active { color:var(--accent); background:rgba(var(--accent-rgb),.08); border-left:3px solid var(--accent); text-shadow:0 0 10px var(--accent); }
+        .nav-dot { width:5px; height:5px; border-radius:50%; background:var(--accent); display:none; box-shadow:0 0 6px var(--accent); }
+        .nav-item.active .nav-dot { display:block; }
+        .nav-badge { display:inline-block; background:rgba(var(--accent-rgb),.2); color:var(--accent); border:1px solid rgba(var(--accent-rgb),.4); font-size:8px; font-family:'Orbitron'; padding:2px 6px; border-radius:4px; }
+
+        /* CONTENT */
+        .content-area { flex:1; padding:20px; overflow-y:auto; min-width:0; }
+        .content { display:none; animation:slideIn .3s ease-out; }
+        .content.active { display:block; }
+
+        /* SECTION HEADERS */
+        .section-hdr  { font-family:'Orbitron'; font-size:10px; color:var(--accent); margin:0 0 14px; padding:8px 10px; background:rgba(var(--accent-rgb),.05); border-left:3px solid var(--accent); border-radius:0 6px 6px 0; letter-spacing:2px; display:flex; align-items:center; gap:8px; }
+        .section-hdr2 { font-family:'Orbitron'; font-size:10px; color:var(--accent2); margin:14px 0 10px; padding:8px 10px; background:rgba(var(--accent2-rgb),.05); border-left:3px solid var(--accent2); border-radius:0 6px 6px 0; letter-spacing:2px; display:flex; align-items:center; gap:8px; }
+
+        /* STATS */
+        .stats-row { display:grid; grid-template-columns:repeat(3,1fr); gap:8px; margin-bottom:16px; }
+        .stat-card { background:var(--bg-card); border:1px solid var(--border); border-radius:10px; padding:14px 12px; text-align:center; }
+        .stat-num { font-family:'Orbitron'; font-size:22px; font-weight:900; color:var(--accent); text-shadow:var(--glow); }
+        .stat-label { font-size:9px; color:var(--text-dim); letter-spacing:2px; margin-top:4px; font-family:'Share Tech Mono'; }
+
+        /* INPUTS */
+        .input-field { flex:1; padding:10px 14px; background:rgba(var(--accent-rgb),.03); border:1px solid rgba(var(--accent-rgb),.2); color:#fff; border-radius:8px; outline:none; font-family:'Share Tech Mono'; font-size:12px; letter-spacing:1px; transition:border-color .3s,box-shadow .3s; min-width:0; }
+        .input-field:focus { border-color:var(--accent); box-shadow:var(--glow); }
+        .input-field::placeholder { color:var(--text-dim); letter-spacing:1px; }
+        select.input-field { cursor:pointer; }
+        textarea.input-field { width:100%; resize:vertical; min-height:80px; line-height:1.6; margin-bottom:10px; }
+
+        /* BUTTONS */
+        .btn-gen { padding:10px 18px; border-radius:8px; background:linear-gradient(135deg,rgba(var(--accent-rgb),.15),rgba(var(--accent2-rgb),.1)); border:1px solid var(--accent); color:var(--accent); font-family:'Orbitron'; font-size:9px; font-weight:700; letter-spacing:2px; cursor:pointer; transition:all .3s; white-space:nowrap; position:relative; overflow:hidden; display:inline-flex; align-items:center; gap:6px; }
+        .btn-gen::after { content:''; position:absolute; top:0; left:-100%; width:100%; height:100%; background:linear-gradient(90deg,transparent,rgba(var(--accent-rgb),.3),transparent); transition:left .4s; }
+        .btn-gen:hover::after { left:100%; }
+        .btn-gen:hover { box-shadow:var(--glow); background:rgba(var(--accent-rgb),.2); }
+        .btn-gen:active { transform:scale(.97); }
+
+        .btn-secondary { padding:10px 14px; border-radius:8px; background:transparent; border:1px solid rgba(var(--accent2-rgb),.4); color:var(--accent2); font-family:'Orbitron'; font-size:9px; font-weight:700; letter-spacing:2px; cursor:pointer; transition:all .3s; white-space:nowrap; display:inline-flex; align-items:center; gap:6px; }
+        .btn-secondary:hover { background:rgba(var(--accent2-rgb),.1); box-shadow:var(--glow2); }
+
+        /* GEN BOX */
+        .gen-box { background:var(--bg-card); border:1px solid var(--border); border-radius:10px; padding:16px; margin-bottom:14px; }
+        .gen-row { display:flex; gap:8px; margin-bottom:10px; align-items:center; flex-wrap:wrap; }
+        .gen-row label { font-size:10px; color:#888; font-family:'Share Tech Mono'; white-space:nowrap; }
+
+        /* KEY TABLE */
+        .key-table-wrap { background:rgba(0,0,0,.3); border:1px solid var(--border); border-radius:10px; overflow:hidden; }
+        .key-table-head { display:grid; grid-template-columns:2fr 1fr 1fr 1fr 70px; padding:10px 14px; background:rgba(var(--accent-rgb),.06); font-family:'Orbitron'; font-size:8px; color:var(--text-dim); letter-spacing:2px; border-bottom:1px solid var(--border); }
+        .key-row { display:grid; grid-template-columns:2fr 1fr 1fr 1fr 70px; padding:12px 14px; border-bottom:1px solid rgba(255,255,255,.03); align-items:center; transition:background .2s; animation:floatUp .3s ease; }
+        .key-row:last-child { border-bottom:none; }
+        .key-row:hover { background:rgba(var(--accent-rgb),.04); }
+        .key-value { font-family:'Share Tech Mono'; font-size:11px; color:#ddd; cursor:pointer; transition:color .2s; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+        .key-value:hover { color:var(--accent); text-shadow:var(--glow); }
+        .key-status { font-size:9px; font-family:'Orbitron'; letter-spacing:1px; padding:3px 8px; border-radius:4px; display:inline-block; }
+        .status-active    { background:rgba(52,199,89,.15); color:#34c759; border:1px solid rgba(52,199,89,.3); }
+        .status-expired   { background:rgba(var(--accent-rgb),.08); color:#555; border:1px solid rgba(255,255,255,.07); }
+        .status-permanent { background:rgba(255,109,0,.15); color:var(--accent2); border:1px solid rgba(255,109,0,.3); }
+        .key-expire { font-family:'Share Tech Mono'; font-size:9px; color:#666; }
+        .key-expire.soon { color:#ffd60a; }
+        .key-created { font-family:'Share Tech Mono'; font-size:9px; color:var(--text-dim); }
+        .key-actions { display:flex; gap:5px; }
+        .btn-icon { width:28px; height:28px; border-radius:6px; cursor:pointer; display:flex; align-items:center; justify-content:center; border:1px solid rgba(255,255,255,.1); background:rgba(255,255,255,.03); transition:all .2s; }
+        .btn-icon:hover { transform:scale(1.12); }
+        .btn-del { border-color:rgba(var(--accent-rgb),.25); }
+        .btn-del:hover { background:rgba(var(--accent-rgb),.15); border-color:var(--accent); box-shadow:var(--glow); }
+        .btn-msg { border-color:rgba(52,199,89,.25); }
+        .btn-msg:hover { background:rgba(52,199,89,.1); border-color:#34c759; box-shadow:0 0 10px rgba(52,199,89,.3); }
+
+        /* EMPTY */
+        .empty-state { text-align:center; padding:40px 20px; font-family:'Share Tech Mono'; color:var(--text-dim); font-size:10px; letter-spacing:2px; }
+        .empty-icon { margin-bottom:12px; opacity:.2; }
+
+        /* FOOTER */
+        .footer-bar { height:38px; background:rgba(0,0,0,.5); border-top:1px solid var(--border); display:flex; align-items:center; justify-content:space-around; font-size:8px; color:var(--text-dim); font-family:'Share Tech Mono'; flex-shrink:0; }
+        .footer-bar b { color:var(--accent); }
+
+        /* BROADCAST */
+        .broadcast-box { background:var(--bg-card); border:1px solid var(--border); border-radius:10px; padding:16px; margin-bottom:14px; }
+        .broadcast-target { display:flex; gap:8px; margin-bottom:10px; flex-wrap:wrap; }
+        .target-btn { padding:8px 14px; border-radius:8px; cursor:pointer; font-family:'Orbitron'; font-size:9px; letter-spacing:2px; border:1px solid var(--border); color:var(--text-dim); background:transparent; transition:all .2s; display:inline-flex; align-items:center; gap:6px; }
+        .target-btn.sel { border-color:var(--accent); color:var(--accent); background:rgba(var(--accent-rgb),.1); }
+        .target-btn:hover { border-color:rgba(var(--accent-rgb),.4); color:#aaa; }
+
+        /* MSG LOG */
+        .msg-log { max-height:200px; overflow-y:auto; }
+        .msg-item { padding:10px 12px; border-radius:8px; margin-bottom:8px; background:rgba(0,0,0,.3); border:1px solid rgba(255,255,255,.05); animation:floatUp .3s ease; }
+        .msg-header { display:flex; justify-content:space-between; margin-bottom:5px; align-items:center; }
+        .msg-to { font-family:'Orbitron'; font-size:8px; color:var(--accent); letter-spacing:2px; display:flex; align-items:center; gap:5px; }
+        .msg-time { font-family:'Share Tech Mono'; font-size:8px; color:var(--text-dim); }
+        .msg-body { font-family:'Share Tech Mono'; font-size:10px; color:#aaa; line-height:1.5; }
+
+        /* CONFIRM */
+        #confirm-modal { position:fixed; inset:0; background:rgba(0,0,0,.85); z-index:1000; display:none; align-items:center; justify-content:center; backdrop-filter:blur(8px); }
+        #confirm-modal.show { display:flex; animation:floatUp .2s ease; }
+        .confirm-box { background:rgba(2,8,15,.98); border:1px solid var(--border); border-radius:14px; padding:30px; text-align:center; width:320px; box-shadow:var(--glow); }
+        .confirm-title { font-family:'Orbitron'; font-size:12px; color:var(--accent); letter-spacing:3px; margin-bottom:10px; display:flex; align-items:center; justify-content:center; gap:8px; }
+        .confirm-sub { font-family:'Share Tech Mono'; font-size:10px; color:#666; margin-bottom:16px; line-height:1.6; }
+        .confirm-key-val { font-family:'Share Tech Mono'; font-size:11px; color:#aaa; margin-bottom:20px; padding:8px; background:rgba(255,255,255,.03); border-radius:6px; border:1px solid var(--border); overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+        .confirm-btns { display:flex; gap:10px; justify-content:center; }
+
+        /* SEARCH */
+        .search-bar { position:relative; margin-bottom:12px; }
+        .search-bar input { width:100%; padding:10px 14px 10px 38px; background:rgba(0,0,0,.4); border:1px solid var(--border); border-radius:30px; color:#fff; font-family:'Share Tech Mono'; font-size:10px; outline:none; transition:border-color .3s,box-shadow .3s; }
+        .search-bar input:focus { border-color:var(--accent); box-shadow:var(--glow); }
+        .search-ico { position:absolute; left:12px; top:50%; transform:translateY(-50%); color:var(--text-dim); pointer-events:none; }
+
+        /* GAS SETTINGS */
+        .gas-setup-box { background:rgba(255,109,0,.04); border:1px solid rgba(255,109,0,.2); border-radius:10px; padding:14px; margin-bottom:14px; }
+        .gas-setup-label { font-size:9px; color:var(--accent2); font-family:'Share Tech Mono'; letter-spacing:2px; margin-bottom:8px; display:flex; align-items:center; gap:6px; }
+        .gas-note { font-size:9px; color:var(--text-dim); font-family:'Share Tech Mono'; margin-top:8px; line-height:1.7; }
+        .code-block { background:rgba(0,0,0,.5); border:1px solid var(--border); border-radius:10px; padding:14px; font-family:'Share Tech Mono'; font-size:9px; color:#aaa; line-height:1.8; overflow-x:auto; white-space:pre; }
+        .c-kw  { color:#34c759; }
+        .c-fn  { color:var(--accent); }
+        .c-str { color:#ffd60a; }
+        .c-var { color:var(--accent2); }
+        .c-cm  { color:var(--text-dim); }
+
+        /* PANEL LINK */
+        .panel-link { text-decoration:none; display:flex; align-items:center; justify-content:center; gap:5px; padding:8px 4px; border:1px solid rgba(var(--accent-rgb),.15); border-radius:8px; transition:all .2s; }
+        .panel-link:hover { border-color:var(--accent); background:rgba(var(--accent-rgb),.05); }
+        .panel-link-label { font-family:'Share Tech Mono'; font-size:8px; color:var(--text-dim); letter-spacing:1px; }
+        .panel-link-name  { font-family:'Orbitron'; font-size:9px; color:var(--accent); letter-spacing:2px; margin-top:2px; }
+
+        /* SCROLLBAR */
+        ::-webkit-scrollbar { width:3px; height:3px; }
+        ::-webkit-scrollbar-track { background:transparent; }
+        ::-webkit-scrollbar-thumb { background:rgba(var(--accent-rgb),.3); border-radius:10px; }
+
+        @media(max-width:600px) {
+            #main-panel { height:100vh; max-height:none; border-radius:0; }
+            .key-table-head,.key-row { grid-template-columns:2fr 1fr 64px; }
+            .key-table-head .col-status,.key-row .key-status,
+            .key-table-head .col-created,.key-row .key-created { display:none; }
+        }
+    </style>
+</head>
+<body>
+
+<div id="sync-bar"></div>
+<div id="toast"></div>
+
+<!-- CONFIRM -->
+<div id="confirm-modal">
+    <div class="confirm-box">
+        <div class="confirm-title">
+            <svg class="ico ico-lg" viewBox="0 0 24 24"><path d="M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
+            CONFIRM DELETE
+        </div>
+        <div class="confirm-sub">คุณแน่ใจหรือว่าต้องการลบ key นี้?<br>ไม่สามารถกู้คืนได้</div>
+        <div class="confirm-key-val" id="confirm-key-display"></div>
+        <div class="confirm-btns">
+            <button class="btn-gen" onclick="confirmDelete()">
+                <svg class="ico" viewBox="0 0 24 24"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14H6L5 6"/><path d="M10 11v6M14 11v6"/><path d="M9 6V4h6v2"/></svg>
+                DELETE
+            </button>
+            <button class="btn-secondary" onclick="closeConfirm()">CANCEL</button>
+        </div>
+    </div>
+</div>
+
+<!-- MAIN -->
+<div id="main-panel" class="glass">
+
+    <div class="win-header">
+        <div class="win-dots">
+            <div class="win-dot" style="background:#ff5f56"></div>
+            <div class="win-dot" style="background:#ffbd2e"></div>
+            <div class="win-dot" style="background:#27c93f"></div>
+        </div>
+        <div class="header-title">PATO KEY MANAGER v1.0</div>
+        <div class="header-right">
+            <div id="gas-status">
+                <div id="gas-dot"></div>
+                <span id="gas-label">NO GAS</span>
+            </div>
+            <span><span class="live-dot"></span>ONLINE</span>
+            <span id="clock-display" style="color:var(--accent)">00:00:00</span>
+        </div>
+    </div>
+
+    <div class="main-container">
+
+        <!-- SIDEBAR -->
+        <div class="sidebar">
+            <div class="sidebar-top">
+
+                <div class="nav-item active" onclick="switchTab('keys',this)">
+                    <div class="nav-dot"></div>
+                    <svg class="ico ico-lg" viewBox="0 0 24 24"><path d="M21 2l-2 2m-7.61 7.61a5.5 5.5 0 1 1-7.778 7.778 5.5 5.5 0 0 1 7.777-7.777zm0 0L15.5 7.5m0 0l3 3L22 7l-3-3m-3.5 3.5L19 4"/></svg>
+                    KEY LIST
+                    <div class="nav-badge" id="badge-total">0</div>
+                </div>
+
+                <div class="nav-item" onclick="switchTab('generate',this)">
+                    <div class="nav-dot"></div>
+                    <svg class="ico ico-lg" viewBox="0 0 24 24"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>
+                    GENERATE
+                </div>
+
+                <div class="nav-item" onclick="switchTab('broadcast',this)">
+                    <div class="nav-dot"></div>
+                    <svg class="ico ico-lg" viewBox="0 0 24 24"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>
+                    BROADCAST
+                    <div class="nav-badge" id="badge-msg" style="display:none">NEW</div>
+                </div>
+
+                <div class="nav-item" onclick="switchTab('settings',this)">
+                    <div class="nav-dot"></div>
+                    <svg class="ico ico-lg" viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
+                    SETTINGS
+                </div>
+
+            </div>
+            <div class="sidebar-bottom">
+                <a href="https://skibidihumyai.github.io/PATO-ANDROID-PANEL/" target="_blank" class="panel-link">
+                    <div>
+                        <div class="panel-link-label">
+                            <svg class="ico ico-sm" viewBox="0 0 24 24" style="stroke:var(--accent2)"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg>
+                            OPEN PANEL
+                        </div>
+                        <div class="panel-link-name">PATO</div>
+                    </div>
+                </a>
+            </div>
+        </div>
+
+        <!-- CONTENT AREA -->
+        <div class="content-area">
+
+            <!-- TAB: KEYS -->
+            <div id="tab-keys" class="content active">
+                <div class="section-hdr">
+                    <svg class="ico" viewBox="0 0 24 24"><path d="M21 2l-2 2m-7.61 7.61a5.5 5.5 0 1 1-7.778 7.778 5.5 5.5 0 0 1 7.777-7.777zm0 0L15.5 7.5m0 0l3 3L22 7l-3-3m-3.5 3.5L19 4"/></svg>
+                    KEY MANAGEMENT
+                </div>
+
+                <div class="stats-row">
+                    <div class="stat-card">
+                        <div class="stat-num" id="stat-total">0</div>
+                        <div class="stat-label">TOTAL KEYS</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-num" style="color:#34c759;text-shadow:0 0 20px rgba(52,199,89,.5)" id="stat-active">0</div>
+                        <div class="stat-label">ACTIVE</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-num" style="color:var(--accent2);text-shadow:var(--glow2)" id="stat-perm">0</div>
+                        <div class="stat-label">PERMANENT</div>
+                    </div>
+                </div>
+
+                <div class="search-bar">
+                    <svg class="ico search-ico" viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+                    <input type="text" id="search-input" placeholder="SEARCH KEY..." oninput="renderKeys()">
+                </div>
+
+                <div class="key-table-wrap">
+                    <div class="key-table-head">
+                        <div>KEY</div>
+                        <div class="col-status">STATUS</div>
+                        <div>EXPIRE</div>
+                        <div class="col-created">CREATED</div>
+                        <div>ACTION</div>
+                    </div>
+                    <div id="key-list-body"></div>
+                </div>
+            </div>
+
+            <!-- TAB: GENERATE -->
+            <div id="tab-generate" class="content">
+                <div class="section-hdr">
+                    <svg class="ico" viewBox="0 0 24 24"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>
+                    GENERATE KEY
+                </div>
+                <div class="gen-box">
+                    <div class="gen-row">
+                        <label>PREFIX</label>
+                        <input type="text" class="input-field" id="prefix-input" value="PATO" style="max-width:100px">
+                        <label>DURATION</label>
+                        <select class="input-field" id="duration-select">
+                            <option value="1">1 วัน</option>
+                            <option value="3">3 วัน</option>
+                            <option value="7">7 วัน</option>
+                            <option value="14">14 วัน</option>
+                            <option value="30" selected>30 วัน</option>
+                            <option value="60">60 วัน</option>
+                            <option value="90">90 วัน</option>
+                            <option value="0">INF - ถาวร</option>
+                        </select>
+                    </div>
+                    <div class="gen-row">
+                        <label>AMOUNT</label>
+                        <input type="number" class="input-field" id="amount-input" value="1" min="1" max="50" style="max-width:80px">
+                        <button class="btn-gen" onclick="generateKeys()">
+                            <svg class="ico" viewBox="0 0 24 24"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>
+                            GENERATE
+                        </button>
+                        <button class="btn-secondary" onclick="clearGenPreview()">CLEAR</button>
+                    </div>
+                </div>
+
+                <div class="section-hdr2">
+                    <svg class="ico" viewBox="0 0 24 24"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>
+                    PREVIEW / RESULT
+                </div>
+                <div id="gen-preview" style="background:rgba(0,0,0,.4);border:1px solid var(--border);border-radius:10px;padding:14px;min-height:80px;font-family:'Share Tech Mono';font-size:11px;color:#aaa;line-height:2;">
+                    <span style="color:var(--text-dim);letter-spacing:2px;font-size:9px;">// KEYS WILL APPEAR HERE...</span>
+                </div>
+                <div style="margin-top:10px;display:flex;gap:8px;">
+                    <button class="btn-gen" id="btn-add-all" onclick="addAllPreviewed()" style="display:none">
+                        <svg class="ico" viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg>
+                        ADD ALL TO LIST
+                    </button>
+                    <button class="btn-secondary" id="btn-copy-all" onclick="copyAllPreviewed()" style="display:none">
+                        <svg class="ico" viewBox="0 0 24 24"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
+                        COPY ALL
+                    </button>
+                </div>
+            </div>
+
+            <!-- TAB: BROADCAST -->
+            <div id="tab-broadcast" class="content">
+                <div class="section-hdr">
+                    <svg class="ico" viewBox="0 0 24 24"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>
+                    BROADCAST MESSAGE
+                </div>
+                <div class="broadcast-box">
+                    <div style="font-size:9px;color:#888;margin-bottom:8px;font-family:'Share Tech Mono';letter-spacing:1px;">TARGET:</div>
+                    <div class="broadcast-target">
+                        <button class="target-btn sel" data-target="all" onclick="selectTarget(this)">
+                            <svg class="ico ico-sm" viewBox="0 0 24 24"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+                            ALL USERS
+                        </button>
+                        <button class="target-btn" data-target="key" onclick="selectTarget(this)">
+                            <svg class="ico ico-sm" viewBox="0 0 24 24"><path d="M21 2l-2 2m-7.61 7.61a5.5 5.5 0 1 1-7.778 7.778 5.5 5.5 0 0 1 7.777-7.777zm0 0L15.5 7.5m0 0l3 3L22 7l-3-3m-3.5 3.5L19 4"/></svg>
+                            BY KEY
+                        </button>
+                    </div>
+                    <div id="target-key-input" style="display:none;margin-bottom:10px;">
+                        <input type="text" class="input-field" id="target-key-value" placeholder="PATO-XXXXXXXX-XXXXXX" style="width:100%">
+                    </div>
+                    <div style="font-size:9px;color:#888;margin-bottom:8px;font-family:'Share Tech Mono';letter-spacing:1px;margin-top:10px;">MESSAGE:</div>
+                    <textarea class="input-field" id="broadcast-msg" placeholder="พิมพ์ข้อความที่ต้องการส่ง..."></textarea>
+                    <div style="display:flex;gap:8px;">
+                        <button class="btn-gen" onclick="sendBroadcast()">
+                            <svg class="ico" viewBox="0 0 24 24"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>
+                            SEND MESSAGE
+                        </button>
+                        <button class="btn-secondary" onclick="clearMsg()">CLEAR</button>
+                    </div>
+                </div>
+                <div class="section-hdr2">
+                    <svg class="ico" viewBox="0 0 24 24"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
+                    MESSAGE LOG
+                </div>
+                <div class="msg-log" id="msg-log">
+                    <div class="empty-state">
+                        <div class="empty-icon"><svg style="width:36px;height:36px;fill:none;stroke:currentColor;stroke-width:1.5" viewBox="0 0 24 24"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg></div>
+                        ยังไม่มีข้อความที่ส่ง
+                    </div>
+                </div>
+            </div>
+
+            <!-- TAB: SETTINGS -->
+            <div id="tab-settings" class="content">
+                <div class="section-hdr">
+                    <svg class="ico" viewBox="0 0 24 24"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/></svg>
+                    GOOGLE APPS SCRIPT (GAS) CONNECTION
+                </div>
+
+                <div class="gas-setup-box">
+                    <div class="gas-setup-label">
+                        <svg class="ico ico-sm" viewBox="0 0 24 24" style="stroke:var(--accent2)"><rect x="2" y="3" width="20" height="14" rx="2"/><line x1="8" y1="21" x2="16" y2="21"/><line x1="12" y1="17" x2="12" y2="21"/></svg>
+                        APPS SCRIPT WEB APP URL
+                    </div>
+                    <div style="display:flex;gap:8px;align-items:center;">
+                        <input type="text" class="input-field" id="gas-url-input" placeholder="https://script.google.com/macros/s/.../exec" style="font-size:10px;letter-spacing:.5px;">
+                        <button class="btn-gen" onclick="saveGasUrl()">
+                            <svg class="ico" viewBox="0 0 24 24"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/><polyline points="7 3 7 8 15 8"/></svg>
+                            SAVE
+                        </button>
+                        <button class="btn-secondary" onclick="testGasConnection()">TEST</button>
+                    </div>
+                    <div class="gas-note">
+                        วาง Deployed Web App URL ของ Google Apps Script<br>
+                        ตั้งค่า: Execute as Me | Access: Anyone<br>
+                        Key จะ sync กับ Google Sheets โดยอัตโนมัติ
+                    </div>
+                </div>
+
+                <div class="section-hdr2">
+                    <svg class="ico" viewBox="0 0 24 24"><polyline points="16 18 22 12 16 6"/><polyline points="8 6 2 12 8 18"/></svg>
+                    GAS SCRIPT TEMPLATE
+                </div>
+                <div class="code-block"><span class="c-cm">// วาง code นี้ใน Google Apps Script แล้ว Deploy เป็น Web App
+// Execute as: Me | Who has access: Anyone</span>
+
+<span class="c-kw">const</span> <span class="c-var">SHEET_KEYS</span> = <span class="c-str">'Keys'</span>;
+<span class="c-kw">const</span> <span class="c-var">SHEET_MSGS</span> = <span class="c-str">'Messages'</span>;
+
+<span class="c-kw">function</span> <span class="c-fn">doGet</span>(e) {
+  <span class="c-kw">const</span> a = e.parameter.action;
+  <span class="c-kw">if</span> (a === <span class="c-str">'getKeys'</span>) <span class="c-kw">return</span> <span class="c-fn">getKeys</span>();
+  <span class="c-kw">if</span> (a === <span class="c-str">'getMsgs'</span>) <span class="c-kw">return</span> <span class="c-fn">getMsgs</span>();
+  <span class="c-kw">return</span> <span class="c-fn">resp</span>({ok:<span class="c-kw">true</span>, msg:<span class="c-str">'PATO GAS ONLINE'</span>});
+}
+
+<span class="c-kw">function</span> <span class="c-fn">doPost</span>(e) {
+  <span class="c-kw">const</span> d = JSON.parse(e.postData.contents);
+  <span class="c-kw">if</span> (d.action === <span class="c-str">'addKey'</span>)    <span class="c-kw">return</span> <span class="c-fn">addKey</span>(d.key);
+  <span class="c-kw">if</span> (d.action === <span class="c-str">'deleteKey'</span>) <span class="c-kw">return</span> <span class="c-fn">deleteKey</span>(d.key);
+  <span class="c-kw">if</span> (d.action === <span class="c-str">'addMsg'</span>)    <span class="c-kw">return</span> <span class="c-fn">addMsg</span>(d.msg);
+  <span class="c-kw">return</span> <span class="c-fn">resp</span>({ok:<span class="c-kw">false</span>});
+}
+
+<span class="c-kw">function</span> <span class="c-fn">getKeys</span>() {
+  <span class="c-kw">const</span> sh = SpreadsheetApp.getActiveSpreadsheet().getSheetByName(<span class="c-var">SHEET_KEYS</span>);
+  <span class="c-kw">const</span> rows = sh.getDataRange().getValues().slice(1);
+  <span class="c-kw">return</span> <span class="c-fn">resp</span>({ok:<span class="c-kw">true</span>, keys: rows.map(r => ({key:r[0],permanent:r[1],expireAt:r[2],createdAt:r[3]}))});
+}
+
+<span class="c-kw">function</span> <span class="c-fn">addKey</span>(k) {
+  <span class="c-kw">const</span> sh = SpreadsheetApp.getActiveSpreadsheet().getSheetByName(<span class="c-var">SHEET_KEYS</span>);
+  sh.appendRow([k.key, k.permanent, k.expireAt || <span class="c-str">''</span>, k.createdAt]);
+  <span class="c-kw">return</span> <span class="c-fn">resp</span>({ok:<span class="c-kw">true</span>});
+}
+
+<span class="c-kw">function</span> <span class="c-fn">deleteKey</span>(keyVal) {
+  <span class="c-kw">const</span> sh = SpreadsheetApp.getActiveSpreadsheet().getSheetByName(<span class="c-var">SHEET_KEYS</span>);
+  <span class="c-kw">const</span> data = sh.getDataRange().getValues();
+  <span class="c-kw">for</span> (<span class="c-kw">let</span> i = data.length - 1; i >= 1; i--) {
+    <span class="c-kw">if</span> (data[i][0] === keyVal) sh.deleteRow(i + 1);
+  }
+  <span class="c-kw">return</span> <span class="c-fn">resp</span>({ok:<span class="c-kw">true</span>});
+}
+
+<span class="c-kw">function</span> <span class="c-fn">addMsg</span>(m) {
+  <span class="c-kw">const</span> sh = SpreadsheetApp.getActiveSpreadsheet().getSheetByName(<span class="c-var">SHEET_MSGS</span>);
+  sh.appendRow([m.to, m.msg, m.sentAt]);
+  <span class="c-kw">return</span> <span class="c-fn">resp</span>({ok:<span class="c-kw">true</span>});
+}
+
+<span class="c-kw">function</span> <span class="c-fn">getMsgs</span>() {
+  <span class="c-kw">const</span> sh = SpreadsheetApp.getActiveSpreadsheet().getSheetByName(<span class="c-var">SHEET_MSGS</span>);
+  <span class="c-kw">const</span> rows = sh.getDataRange().getValues().slice(1);
+  <span class="c-kw">return</span> <span class="c-fn">resp</span>({ok:<span class="c-kw">true</span>, msgs: rows.map(r => ({to:r[0],msg:r[1],sentAt:r[2]})).reverse()});
+}
+
+<span class="c-kw">function</span> <span class="c-fn">resp</span>(data) {
+  <span class="c-kw">return</span> ContentService
+    .createTextOutput(JSON.stringify(data))
+    .setMimeType(ContentService.MimeType.JSON);
+}</div>
+            </div>
+
+        </div><!-- end content-area -->
+    </div><!-- end main-container -->
+
+    <div class="footer-bar">
+        <span>KEYS: <b id="f-total">0</b></span>
+        <span>ACTIVE: <b id="f-active" style="color:#34c759">0</b></span>
+        <span>EXPIRED: <b id="f-expired">0</b></span>
+        <span>SYNC: <b id="f-gas">LOCAL</b></span>
+        <span id="f-date" style="color:var(--text-dim)">--/--/----</span>
+    </div>
+
+</div><!-- end main-panel -->
+
+<script>
+/* ======================================================
+   STATE
+====================================================== */
+let keys     = JSON.parse(localStorage.getItem('pato_keys') || '[]');
+let messages = JSON.parse(localStorage.getItem('pato_msgs') || '[]');
+let gasUrl   = localStorage.getItem('pato_gas_url') || '';
+let previewedKeys = [];
+let deleteTarget  = null;
+let gasMode = false;
+
+/* ======================================================
+   GAS
+====================================================== */
+function saveGasUrl() {
+    gasUrl = document.getElementById('gas-url-input').value.trim();
+    localStorage.setItem('pato_gas_url', gasUrl);
+    gasUrl ? testGasConnection() : (setGasDot('off'), toast('GAS URL CLEARED', 'info'));
+}
+
+function testGasConnection() {
+    if (!gasUrl) { toast('NO GAS URL SET', 'error'); return; }
+    setGasDot('loading');
+    fetch(gasUrl + '?action=ping')
+        .then(r => r.json())
+        .then(() => {
+            setGasDot('ok'); gasMode = true;
+            document.getElementById('f-gas').textContent = 'SHEETS';
+            document.getElementById('f-gas').style.color = '#34c759';
+            toast('GAS CONNECTED', 'success');
+            syncFromGas();
+        })
+        .catch(() => { setGasDot('err'); gasMode = false; toast('GAS FAILED', 'error'); });
+}
+
+function setGasDot(state) {
+    const dot = document.getElementById('gas-dot');
+    const lbl = document.getElementById('gas-label');
+    dot.className = state;
+    lbl.textContent = {ok:'GAS OK', err:'GAS ERR', loading:'CONNECTING...', off:'NO GAS'}[state] || 'NO GAS';
+}
+
+async function syncFromGas() {
+    if (!gasUrl || !gasMode) return;
+    showSync();
+    try {
+        const rk = await fetch(gasUrl + '?action=getKeys');
+        const dk = await rk.json();
+        if (dk.ok && dk.keys) { keys = dk.keys; saveLocal(); renderKeys(); }
+
+        const rm = await fetch(gasUrl + '?action=getMsgs');
+        const dm = await rm.json();
+        if (dm.ok && dm.msgs) { messages = dm.msgs; saveLocal(); renderMessages(); }
+    } catch(e) { setGasDot('err'); gasMode = false; }
+    hideSync();
+}
+
+async function gasPost(payload) {
+    if (!gasUrl || !gasMode) return false;
+    try {
+        const r = await fetch(gasUrl, { method:'POST', body:JSON.stringify(payload) });
+        const d = await r.json();
+        return d.ok;
+    } catch { return false; }
+}
+
+function showSync() { document.getElementById('sync-bar').classList.add('active'); }
+function hideSync() { setTimeout(() => document.getElementById('sync-bar').classList.remove('active'), 800); }
+
+/* ======================================================
+   STORAGE
+====================================================== */
+function saveLocal() {
+    localStorage.setItem('pato_keys', JSON.stringify(keys));
+    localStorage.setItem('pato_msgs', JSON.stringify(messages));
+}
+
+/* ======================================================
+   UTILS
+====================================================== */
+function generateKeyStr(prefix) {
+    const c = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
+    const r = n => Array.from({length:n}, () => c[Math.floor(Math.random()*c.length)]).join('');
+    return `${prefix}-${r(8)}-${r(6)}`;
+}
+function formatDate(ts) {
+    if (!ts) return 'PERMANENT';
+    const d = new Date(ts);
+    return `${p(d.getDate())}/${p(d.getMonth()+1)}/${d.getFullYear()}`;
+}
+function getStatus(k) {
+    if (k.permanent) return 'permanent';
+    return new Date() > new Date(k.expireAt) ? 'expired' : 'active';
+}
+function getDaysLeft(k) {
+    if (k.permanent) return null;
+    return Math.ceil((new Date(k.expireAt) - new Date()) / 86400000);
+}
+function toast(msg, type='success') {
+    const t = document.getElementById('toast');
+    t.textContent = msg; t.className = `toast-${type}`;
+    clearTimeout(t._t);
+    t._t = setTimeout(() => t.className='', 2500);
+}
+function p(x) { return x.toString().padStart(2,'0'); }
+function copyText(text) {
+    navigator.clipboard.writeText(text).catch(() => {
+        const ta = document.createElement('textarea');
+        ta.value = text; document.body.appendChild(ta);
+        ta.select(); document.execCommand('copy');
+        document.body.removeChild(ta);
+    });
+}
+
+/* ======================================================
+   CLOCK
+====================================================== */
+function updateClock() {
+    const n = new Date();
+    document.getElementById('clock-display').textContent = `${p(n.getHours())}:${p(n.getMinutes())}:${p(n.getSeconds())}`;
+    document.getElementById('f-date').textContent = `${p(n.getDate())}/${p(n.getMonth()+1)}/${n.getFullYear()}`;
+}
+setInterval(updateClock, 1000); updateClock();
+
+/* ======================================================
+   TABS
+====================================================== */
+function switchTab(tab, el) {
+    document.querySelectorAll('.content').forEach(c => c.classList.remove('active'));
+    document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+    document.getElementById(`tab-${tab}`).classList.add('active');
+    el.classList.add('active');
+}
+
+/* ======================================================
+   STATS
+====================================================== */
+function updateStats() {
+    const total   = keys.length;
+    const active  = keys.filter(k => getStatus(k)==='active').length;
+    const perm    = keys.filter(k => k.permanent).length;
+    const expired = keys.filter(k => getStatus(k)==='expired').length;
+    document.getElementById('stat-total').textContent  = total;
+    document.getElementById('stat-active').textContent = active;
+    document.getElementById('stat-perm').textContent   = perm;
+    document.getElementById('badge-total').textContent = total;
+    document.getElementById('f-total').textContent   = total;
+    document.getElementById('f-active').textContent  = active;
+    document.getElementById('f-expired').textContent = expired;
+}
+
+/* ======================================================
+   RENDER KEYS
+====================================================== */
+const SVG_MSG = `<svg class="ico ico-sm" viewBox="0 0 24 24" fill="none" stroke="#34c759" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>`;
+const SVG_DEL = `<svg class="ico ico-sm" viewBox="0 0 24 24" fill="none" stroke="#ff3b30" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14H6L5 6"/><path d="M10 11v6M14 11v6"/><path d="M9 6V4h6v2"/></svg>`;
+const EMPTY_KEY = `<div class="empty-state"><div class="empty-icon"><svg style="width:36px;height:36px;fill:none;stroke:currentColor;stroke-width:1.5" viewBox="0 0 24 24"><path d="M21 2l-2 2m-7.61 7.61a5.5 5.5 0 1 1-7.778 7.778 5.5 5.5 0 0 1 7.777-7.777zm0 0L15.5 7.5m0 0l3 3L22 7l-3-3m-3.5 3.5L19 4"/></svg></div>ยังไม่มี key &mdash; ไปที่ GENERATE</div>`;
+
+function renderKeys() {
+    const q = document.getElementById('search-input').value.toLowerCase();
+    const body = document.getElementById('key-list-body');
+    const filtered = keys.filter(k => k.key && k.key.toLowerCase().includes(q));
+
+    if (!filtered.length) { body.innerHTML = EMPTY_KEY; updateStats(); return; }
+
+    body.innerHTML = filtered.map(k => {
+        const st = getStatus(k);
+        const dl = getDaysLeft(k);
+        const soon = dl !== null && dl <= 3 && dl > 0;
+        const stHtml = st === 'active'
+            ? `<span class="key-status status-active">ACTIVE</span>`
+            : st === 'permanent'
+            ? `<span class="key-status status-permanent">PERM</span>`
+            : `<span class="key-status status-expired">EXPIRED</span>`;
+        const expTxt = k.permanent ? 'PERMANENT' : (st==='expired' ? 'EXPIRED' : `${dl}d LEFT`);
+        return `<div class="key-row">
+            <div class="key-value" onclick="copyKey('${k.key}')" title="คลิกเพื่อ copy">${k.key}</div>
+            <div class="col-status">${stHtml}</div>
+            <div class="key-expire${soon?' soon':''}">${expTxt}</div>
+            <div class="key-created">${formatDate(k.createdAt)}</div>
+            <div class="key-actions">
+                <div class="btn-icon btn-msg" title="ส่งข้อความ" onclick="quickMsg('${k.key}')">${SVG_MSG}</div>
+                <div class="btn-icon btn-del" title="ลบ key" onclick="promptDelete('${k.key}')">${SVG_DEL}</div>
+            </div>
+        </div>`;
+    }).join('');
+    updateStats();
+}
+
+function copyKey(key) {
+    copyText(key);
+    toast('COPIED: ' + key.substring(0,18)+'...', 'success');
+}
+
+/* ======================================================
+   GENERATE
+====================================================== */
+function generateKeys() {
+    const prefix = document.getElementById('prefix-input').value.trim() || 'PATO';
+    const days   = parseInt(document.getElementById('duration-select').value);
+    const amount = Math.min(50, Math.max(1, parseInt(document.getElementById('amount-input').value)||1));
+
+    previewedKeys = [];
+    for (let i=0; i<amount; i++) {
+        previewedKeys.push({
+            key: generateKeyStr(prefix),
+            permanent: days === 0,
+            expireAt: days > 0 ? new Date(Date.now()+days*86400000).toISOString() : null,
+            createdAt: new Date().toISOString(),
+            days
+        });
+    }
+
+    document.getElementById('gen-preview').innerHTML = previewedKeys.map(k =>
+        `<div style="display:flex;align-items:center;gap:10px;margin-bottom:4px;">
+            <span style="color:var(--accent);font-size:9px;font-family:'Orbitron';min-width:50px;">${k.permanent?'PERM':k.days+'D'}</span>
+            <span style="color:#ddd;">${k.key}</span>
+        </div>`
+    ).join('');
+
+    document.getElementById('btn-add-all').style.display = 'inline-flex';
+    document.getElementById('btn-copy-all').style.display = 'inline-flex';
+    toast(`GENERATED ${amount} KEY${amount>1?'S':''}`, 'info');
+}
+
+async function addAllPreviewed() {
+    if (!previewedKeys.length) return;
+    showSync();
+    let added = 0;
+    for (const k of previewedKeys) {
+        if (!keys.find(e => e.key === k.key)) {
+            keys.unshift(k); added++;
+            if (gasMode) await gasPost({ action:'addKey', key:k });
+        }
+    }
+    saveLocal(); renderKeys();
+    toast(`ADDED ${added} KEY${added>1?'S':''}`, 'success');
+    previewedKeys = [];
+    document.getElementById('gen-preview').innerHTML = `<span style="color:var(--text-dim);letter-spacing:2px;font-size:9px;">// KEYS WILL APPEAR HERE...</span>`;
+    document.getElementById('btn-add-all').style.display = 'none';
+    document.getElementById('btn-copy-all').style.display = 'none';
+    hideSync();
+}
+
+function copyAllPreviewed() {
+    copyText(previewedKeys.map(k=>k.key).join('\n'));
+    toast('COPIED ALL KEYS', 'info');
+}
+
+function clearGenPreview() {
+    previewedKeys = [];
+    document.getElementById('gen-preview').innerHTML = `<span style="color:var(--text-dim);letter-spacing:2px;font-size:9px;">// KEYS WILL APPEAR HERE...</span>`;
+    document.getElementById('btn-add-all').style.display = 'none';
+    document.getElementById('btn-copy-all').style.display = 'none';
+}
+
+/* ======================================================
+   DELETE
+====================================================== */
+function promptDelete(key) {
+    deleteTarget = key;
+    document.getElementById('confirm-key-display').textContent = key;
+    document.getElementById('confirm-modal').classList.add('show');
+}
+function closeConfirm() {
+    deleteTarget = null;
+    document.getElementById('confirm-modal').classList.remove('show');
+}
+async function confirmDelete() {
+    if (!deleteTarget) return;
+    showSync();
+    if (gasMode) await gasPost({ action:'deleteKey', key:deleteTarget });
+    keys = keys.filter(k => k.key !== deleteTarget);
+    saveLocal(); renderKeys();
+    toast('KEY DELETED', 'error');
+    closeConfirm(); hideSync();
+}
+
+/* ======================================================
+   BROADCAST
+====================================================== */
+function selectTarget(el) {
+    document.querySelectorAll('.target-btn').forEach(b => b.classList.remove('sel'));
+    el.classList.add('sel');
+    document.getElementById('target-key-input').style.display =
+        el.dataset.target === 'key' ? 'block' : 'none';
+}
+
+function quickMsg(key) {
+    switchTab('broadcast', document.querySelectorAll('.nav-item')[2]);
+    document.querySelectorAll('.target-btn').forEach(b => b.classList.remove('sel'));
+    document.querySelector('.target-btn[data-target="key"]').classList.add('sel');
+    document.getElementById('target-key-input').style.display = 'block';
+    document.getElementById('target-key-value').value = key;
+    document.getElementById('broadcast-msg').focus();
+}
+
+async function sendBroadcast() {
+    const msg = document.getElementById('broadcast-msg').value.trim();
+    if (!msg) { toast('กรุณาพิมพ์ข้อความ', 'error'); return; }
+    const sel    = document.querySelector('.target-btn.sel').dataset.target;
+    const target = sel === 'all' ? 'ALL USERS' : (document.getElementById('target-key-value').value.trim() || 'ALL USERS');
+    const entry  = { id:Date.now(), to:target, msg, sentAt:new Date().toISOString() };
+    messages.unshift(entry);
+    saveLocal(); renderMessages();
+    if (gasMode) { showSync(); await gasPost({ action:'addMsg', msg:entry }); hideSync(); }
+    document.getElementById('broadcast-msg').value = '';
+    document.getElementById('badge-msg').style.display = 'inline-block';
+    toast('MESSAGE SENT', 'success');
+}
+
+function clearMsg() {
+    document.getElementById('broadcast-msg').value = '';
+    document.getElementById('target-key-value').value = '';
+}
+
+function renderMessages() {
+    const log = document.getElementById('msg-log');
+    if (!messages.length) {
+        log.innerHTML = `<div class="empty-state"><div class="empty-icon"><svg style="width:36px;height:36px;fill:none;stroke:currentColor;stroke-width:1.5" viewBox="0 0 24 24"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg></div>ยังไม่มีข้อความที่ส่ง</div>`;
+        return;
+    }
+    log.innerHTML = messages.slice(0,20).map(m => `
+        <div class="msg-item">
+            <div class="msg-header">
+                <span class="msg-to">${SVG_MSG}&nbsp;TO: ${m.to}</span>
+                <span class="msg-time">${new Date(m.sentAt).toLocaleString('th-TH')}</span>
+            </div>
+            <div class="msg-body">${m.msg}</div>
+        </div>`
+    ).join('');
+}
+
+/* ======================================================
+   INIT
+====================================================== */
+if (gasUrl) {
+    document.getElementById('gas-url-input').value = gasUrl;
+    testGasConnection();
+}
+renderKeys();
+renderMessages();
+</script>
+</body>
+</html>
